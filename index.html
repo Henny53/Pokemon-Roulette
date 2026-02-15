@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poké-Roulette Gen 1-5</title>
+    <style>
+        :root {
+            --primary-color: #ef5350;
+            --secondary-color: #3761a8;
+            --accent-color: #feca1b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        h1 { color: var(--secondary-color); text-shadow: 2px 2px var(--accent-color); }
+
+        /* Das Rad-Container */
+        .wheel-container {
+            position: relative;
+            width: 350px;
+            height: 350px;
+            margin: 30px 0;
+        }
+
+        /* Der Zeiger */
+        .pointer {
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 30px solid var(--primary-color);
+            z-index: 10;
+        }
+
+        #wheel {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 8px solid #333;
+            position: relative;
+            overflow: hidden;
+            transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); /* Butterweicher Stop */
+            background: #fff;
+        }
+
+        .segment {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            transform-origin: 100% 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            text-align: center;
+            padding-bottom: 50px;
+            box-sizing: border-box;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+        }
+
+        /* Button Styling */
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 4px #b91d1d;
+            transition: 0.2s;
+        }
+
+        button:active {
+            box-shadow: 0 0;
+            transform: translateY(4px);
+        }
+
+        button:disabled { background-color: #ccc; box-shadow: none; }
+
+        /* Ergebnis-Anzeige */
+        #result {
+            margin-top: 20px;
+            text-align: center;
+            min-height: 150px;
+        }
+
+        #pokemon-img { width: 120px; height: 120px; display: none; }
+        #pokemon-name { font-size: 1.5rem; font-weight: bold; color: var(--secondary-color); text-transform: capitalize; }
+    </style>
+</head>
+<body>
+
+    <h1>Poké-Roulette</h1>
+    <p>Nur Gen 1 bis Gen 5</p>
+
+    <div class="wheel-container">
+        <div class="pointer"></div>
+        <div id="wheel"></div>
+    </div>
+
+    <button id="spin-btn">DREHEN!</button>
+
+    <div id="result">
+        <div id="pokemon-name">Wer wird es?</div>
+        <img id="pokemon-img" src="" alt="Pokemon">
+    </div>
+
+    <script>
+        const wheel = document.getElementById('wheel');
+        const spinBtn = document.getElementById('spin-btn');
+        const nameDisplay = document.getElementById('pokemon-name');
+        const imgDisplay = document.getElementById('pokemon-img');
+
+        const SEGMENT_COUNT = 12; // Wie viele Segmente im Rad sichtbar sind
+        const MAX_POKEMON_ID = 649; // Ende der 5. Generation
+        let currentRotation = 0;
+
+        // Farben für die Segmente
+        const colors = ['#EE1515', '#222222', '#F0F0F0', '#3761A8', '#FECA1B', '#7AC74C'];
+
+        // 1. Initialisierung: Rad mit zufälligen Pokemon füllen
+        async function setupWheel() {
+            wheel.innerHTML = '';
+            for (let i = 0; i < SEGMENT_COUNT; i++) {
+                const segment = document.createElement('div');
+                segment.className = 'segment';
+                
+                // Zufälliges Pokémon für das Segment auswählen
+                const randomId = Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
+                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
+                const data = await response.json();
+                
+                segment.style.backgroundColor = colors[i % colors.length];
+                segment.style.color = (i % colors.length === 1) ? 'white' : (i % colors.length === 2) ? 'black' : 'white';
+                segment.style.transform = `rotate(${i * (360 / SEGMENT_COUNT)}deg)`;
+                
+                // Name ins Segment schreiben
+                segment.innerHTML = `<span style="transform: rotate(45deg)">${data.name}</span>`;
+                segment.dataset.pokemonId = randomId;
+                segment.dataset.pokemonName = data.name;
+                
+                wheel.appendChild(segment);
+            }
+        }
+
+        async function spin() {
+            spinBtn.disabled = true;
+            imgDisplay.style.display = 'none';
+            nameDisplay.innerText = "Suchen...";
+
+            // Zufällige Drehung: Mindestens 5 volle Runden + Zufall
+            const extraDegree = Math.floor(Math.random() * 360);
+            currentRotation += 1800 + extraDegree; 
+            
+            wheel.style.transform = `rotate(${currentRotation}deg) `;
+
+            // Warten bis Animation zu Ende ist (5s)
+            setTimeout(async () => {
+                // Berechnen, welches Segment oben ist
+                const actualDegree = currentRotation % 360;
+                const segmentAngle = 360 / SEGMENT_COUNT;
+                // Index berechnen (Der Zeiger ist oben bei 0 Grad, das Rad dreht sich im Uhrzeigersinn)
+                const winningIndex = Math.floor((360 - actualDegree % 360) / segmentAngle) % SEGMENT_COUNT;
+                
+                const winningSegment = wheel.children[winningIndex];
+                const pokeId = winningSegment.dataset.pokemonId;
+                const pokeName = winningSegment.dataset.pokemonName;
+
+                // Ergebnis anzeigen
+                nameDisplay.innerText = pokeName;
+                imgDisplay.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeId}.png`;
+                imgDisplay.style.display = 'block';
+                
+                spinBtn.disabled = false;
+                
+                // Rad für die nächste Runde neu bestücken (optional für mehr Abwechslung)
+                setTimeout(setupWheel, 2000); 
+            }, 5000);
+        }
+
+        spinBtn.addEventListener('click', spin);
+        
+        // Start-Setup
+        setupWheel();
+    </script>
+</body>
+</html>
