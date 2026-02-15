@@ -3,202 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Poké-Roulette Gen 1-5</title>
+    <title>Umfangreiches Poké-Roulette</title>
     <style>
         :root {
-            --primary-color: #ef5350;
-            --secondary-color: #3761a8;
-            --accent-color: #feca1b;
+            --primary: #ef5350; --secondary: #3761a8; --accent: #feca1b; --dark: #333;
         }
-
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-            overflow-x: hidden;
+            font-family: 'Arial', sans-serif; background: #f4f4f4; margin: 0; 
+            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
-
-        h1 { color: var(--secondary-color); text-shadow: 2px 2px var(--accent-color); }
-
-        /* Das Rad-Container */
-        .wheel-container {
-            position: relative;
-            width: 350px;
-            height: 350px;
-            margin: 30px 0;
+        .app-container { width: 100%; max-width: 500px; padding: 20px; text-align: center; }
+        
+        /* Das Rad */
+        .wheel-box { position: relative; width: 300px; height: 300px; margin: 20px auto; }
+        .pointer { 
+            position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
+            width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent;
+            border-top: 30px solid var(--primary); z-index: 10;
         }
-
-        /* Der Zeiger */
-        .pointer {
-            position: absolute;
-            top: -10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0; 
-            height: 0; 
-            border-left: 15px solid transparent;
-            border-right: 15px solid transparent;
-            border-top: 30px solid var(--primary-color);
-            z-index: 10;
+        #wheel { 
+            width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--dark);
+            position: relative; overflow: hidden; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
+            background: white;
         }
-
-        #wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 8px solid #333;
-            position: relative;
-            overflow: hidden;
-            transition: transform 5s cubic-bezier(0.15, 0, 0.15, 1); /* Butterweicher Stop */
-            background: #fff;
-        }
-
         .segment {
-            position: absolute;
-            width: 50%;
-            height: 50%;
-            transform-origin: 100% 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 12px;
-            color: white;
-            text-align: center;
-            padding-bottom: 50px;
-            box-sizing: border-box;
-            clip-path: polygon(0 0, 100% 0, 100% 100%);
+            position: absolute; width: 50%; height: 50%; transform-origin: 100% 100%;
+            display: flex; align-items: center; justify-content: center;
+            color: white; font-weight: bold; font-size: 14px; clip-path: polygon(0 0, 100% 0, 100% 100%);
         }
 
-        /* Button Styling */
-        button {
-            padding: 15px 40px;
-            font-size: 1.2rem;
-            background-color: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 30px;
-            cursor: pointer;
-            box-shadow: 0 4px #b91d1d;
-            transition: 0.2s;
+        /* Status & Info */
+        .status-bar { background: var(--dark); color: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
+        .result-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 20px; min-height: 150px; }
+        
+        button { 
+            background: var(--primary); color: white; border: none; padding: 15px 30px; 
+            font-size: 18px; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 80%;
         }
-
-        button:active {
-            box-shadow: 0 0;
-            transform: translateY(4px);
-        }
-
-        button:disabled { background-color: #ccc; box-shadow: none; }
-
-        /* Ergebnis-Anzeige */
-        #result {
-            margin-top: 20px;
-            text-align: center;
-            min-height: 150px;
-        }
-
-        #pokemon-img { width: 120px; height: 120px; display: none; }
-        #pokemon-name { font-size: 1.5rem; font-weight: bold; color: var(--secondary-color); text-transform: capitalize; }
+        button:disabled { background: #999; }
+        img { width: 100px; height: 100px; }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-    <h1>Poké-Roulette</h1>
-    <p>Nur Gen 1 bis Gen 5</p>
+<div class="app-container">
+    <div class="status-bar">
+        <span id="game-phase">Phase: Generation wählen</span>
+    </div>
 
-    <div class="wheel-container">
+    <div class="wheel-box">
         <div class="pointer"></div>
         <div id="wheel"></div>
     </div>
 
     <button id="spin-btn">DREHEN!</button>
 
-    <div id="result">
-        <div id="pokemon-name">Wer wird es?</div>
-        <img id="pokemon-img" src="" alt="Pokemon">
+    <div class="result-card" id="result">
+        <h2 id="result-title">Bereit?</h2>
+        <div id="result-content">Klicke auf Drehen, um zu starten.</div>
+        <img id="result-img" class="hidden" src="" alt="Pokemon">
+        <button id="next-btn" class="hidden">Weiter zur nächsten Phase</button>
     </div>
+</div>
 
-    <script>
-        const wheel = document.getElementById('wheel');
-        const spinBtn = document.getElementById('spin-btn');
-        const nameDisplay = document.getElementById('pokemon-name');
-        const imgDisplay = document.getElementById('pokemon-img');
+<script>
+    // --- DATEN ---
+    const starters = {
+        1: [1, 4, 7], 2: [152, 155, 158], 3: [252, 255, 258],
+        4: [387, 390, 393], 5: [495, 498, 501], 6: [650, 653, 656],
+        7: [722, 725, 728], 8: [810, 813, 816], 9: [906, 909, 912]
+    };
 
-        const SEGMENT_COUNT = 12; // Wie viele Segmente im Rad sichtbar sind
-        const MAX_POKEMON_ID = 649; // Ende der 5. Generation
-        let currentRotation = 0;
+    const actions = [
+        "Neuer Encounter (Fangen)", "Arena-Kampf!", "Rivalen-Kampf", 
+        "Item finden", "Pokémon entwickeln", "Tauschen (PC)", 
+        "Heilung im Center", "Zufälliges Ereignis"
+    ];
 
-        // Farben für die Segmente
-        const colors = ['#EE1515', '#222222', '#F0F0F0', '#3761A8', '#FECA1B', '#7AC74C'];
+    let state = {
+        phase: 'SELECT_GEN',
+        selectedGen: null,
+        selectedStarter: null,
+        currentRotation: 0,
+        isSpinning: false
+    };
 
-        // 1. Initialisierung: Rad mit zufälligen Pokemon füllen
-        async function setupWheel() {
-            wheel.innerHTML = '';
-            for (let i = 0; i < SEGMENT_COUNT; i++) {
-                const segment = document.createElement('div');
-                segment.className = 'segment';
-                
-                // Zufälliges Pokémon für das Segment auswählen
-                const randomId = Math.floor(Math.random() * MAX_POKEMON_ID) + 1;
-                const response = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
-                const data = await response.json();
-                
-                segment.style.backgroundColor = colors[i % colors.length];
-                segment.style.color = (i % colors.length === 1) ? 'white' : (i % colors.length === 2) ? 'black' : 'white';
-                segment.style.transform = `rotate(${i * (360 / SEGMENT_COUNT)}deg)`;
-                
-                // Name ins Segment schreiben
-                segment.innerHTML = `<span style="transform: rotate(45deg)">${data.name}</span>`;
-                segment.dataset.pokemonId = randomId;
-                segment.dataset.pokemonName = data.name;
-                
-                wheel.appendChild(segment);
+    const wheel = document.getElementById('wheel');
+    const spinBtn = document.getElementById('spin-btn');
+    const nextBtn = document.getElementById('next-btn');
+    const resTitle = document.getElementById('result-title');
+    const resContent = document.getElementById('result-content');
+    const resImg = document.getElementById('result-img');
+    const phaseLabel = document.getElementById('game-phase');
+
+    // --- LOGIK ---
+
+    function buildWheel(items) {
+        wheel.innerHTML = '';
+        const angle = 360 / items.length;
+        items.forEach((item, i) => {
+            const seg = document.createElement('div');
+            seg.className = 'segment';
+            seg.style.transform = `rotate(${i * angle}deg)`;
+            seg.style.backgroundColor = `hsl(${i * (360/items.length)}, 70%, 50%)`;
+            seg.innerHTML = `<span style="transform: rotate(45deg) translate(20px, 20px)">${item}</span>`;
+            wheel.appendChild(seg);
+        });
+    }
+
+    function initPhase() {
+        nextBtn.classList.add('hidden');
+        resImg.classList.add('hidden');
+        
+        if (state.phase === 'SELECT_GEN') {
+            phaseLabel.innerText = "Phase: Generation wählen";
+            buildWheel([1, 2, 3, 4, 5, 6, 7, 8, 9]);
+        } else if (state.phase === 'SELECT_STARTER') {
+            phaseLabel.innerText = `Phase: Starter wählen (Gen ${state.selectedGen})`;
+            // Wir holen die Namen der Starter per API für das Rad
+            resContent.innerText = "Lade Starter...";
+            buildWheel(["Pflanze", "Feuer", "Wasser"]);
+        } else {
+            phaseLabel.innerText = "Spiel-Modus: Aktionen";
+            buildWheel(actions);
+        }
+    }
+
+    async function spin() {
+        if (state.isSpinning) return;
+        state.isSpinning = true;
+        spinBtn.disabled = true;
+
+        const extraDeg = Math.floor(Math.random() * 360) + 1800; // 5 Runden + Zufall
+        state.currentRotation += extraDeg;
+        wheel.style.transform = `rotate(${state.currentRotation}deg)`;
+
+        setTimeout(async () => {
+            state.isSpinning = false;
+            spinBtn.disabled = false;
+            processResult();
+        }, 4000);
+    }
+
+    async function processResult() {
+        const segments = wheel.children.length;
+        const actualDeg = state.currentRotation % 360;
+        const winningIndex = Math.floor((360 - actualDeg) / (360 / segments)) % segments;
+
+        if (state.phase === 'SELECT_GEN') {
+            state.selectedGen = winningIndex + 1;
+            resTitle.innerText = `Generation ${state.selectedGen}!`;
+            resContent.innerText = "Du spielst in dieser Region. Klicke weiter für deinen Starter.";
+            nextBtn.classList.remove('hidden');
+        } 
+        else if (state.phase === 'SELECT_STARTER') {
+            const starterIds = starters[state.selectedGen];
+            const winnerId = starterIds[winningIndex];
+            
+            const resp = await fetch(`https://pokeapi.co/api/v2/pokemon/${winnerId}`);
+            const data = await resp.json();
+            
+            state.selectedStarter = data.name;
+            resTitle.innerText = `Dein Starter: ${data.name.toUpperCase()}`;
+            resContent.innerText = "Ein starker Partner! Jetzt beginnt das Abenteuer.";
+            resImg.src = data.sprites.other['official-artwork'].front_default;
+            resImg.classList.remove('hidden');
+            nextBtn.classList.remove('hidden');
+        } 
+        else {
+            const action = actions[winningIndex];
+            resTitle.innerText = "Deine Aktion:";
+            resContent.innerText = action;
+            
+            if (action.includes("Encounter")) {
+                // Zufälliges Pokemon aus den gewählten Gens fangen
+                const randomId = Math.floor(Math.random() * 900) + 1;
+                const resp = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
+                const data = await resp.json();
+                resContent.innerText = `Fangversuch: Ein wildes ${data.name.toUpperCase()} erscheint!`;
+                resImg.src = data.sprites.other['official-artwork'].front_default;
+                resImg.classList.remove('hidden');
             }
         }
+    }
 
-        async function spin() {
-            spinBtn.disabled = true;
-            imgDisplay.style.display = 'none';
-            nameDisplay.innerText = "Suchen...";
+    nextBtn.addEventListener('click', () => {
+        if (state.phase === 'SELECT_GEN') state.phase = 'SELECT_STARTER';
+        else if (state.phase === 'SELECT_STARTER') state.phase = 'GAME_LOOP';
+        initPhase();
+        resTitle.innerText = "Nächster Schritt";
+        resContent.innerText = "Drehe das Rad!";
+    });
 
-            // Zufällige Drehung: Mindestens 5 volle Runden + Zufall
-            const extraDegree = Math.floor(Math.random() * 360);
-            currentRotation += 1800 + extraDegree; 
-            
-            wheel.style.transform = `rotate(${currentRotation}deg) `;
+    spinBtn.addEventListener('click', spin);
+    initPhase();
+</script>
 
-            // Warten bis Animation zu Ende ist (5s)
-            setTimeout(async () => {
-                // Berechnen, welches Segment oben ist
-                const actualDegree = currentRotation % 360;
-                const segmentAngle = 360 / SEGMENT_COUNT;
-                // Index berechnen (Der Zeiger ist oben bei 0 Grad, das Rad dreht sich im Uhrzeigersinn)
-                const winningIndex = Math.floor((360 - actualDegree % 360) / segmentAngle) % SEGMENT_COUNT;
-                
-                const winningSegment = wheel.children[winningIndex];
-                const pokeId = winningSegment.dataset.pokemonId;
-                const pokeName = winningSegment.dataset.pokemonName;
-
-                // Ergebnis anzeigen
-                nameDisplay.innerText = pokeName;
-                imgDisplay.src = `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeId}.png`;
-                imgDisplay.style.display = 'block';
-                
-                spinBtn.disabled = false;
-                
-                // Rad für die nächste Runde neu bestücken (optional für mehr Abwechslung)
-                setTimeout(setupWheel, 2000); 
-            }, 5000);
-        }
-
-        spinBtn.addEventListener('click', spin);
-        
-        // Start-Setup
-        setupWheel();
-    </script>
 </body>
 </html>
