@@ -3,201 +3,269 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Umfangreiches Poké-Roulette</title>
+    <title>Poké-Roulette Ultimate Challenge</title>
     <style>
         :root {
-            --primary: #ef5350; --secondary: #3761a8; --accent: #feca1b; --dark: #333;
+            --pokered: #ff1c1c; --pokeblue: #3b4cca; --pokeyellow: #ffde00;
+            --dark: #2a2a2a; --light: #f4f4f4; --white: #ffffff;
         }
         body {
-            font-family: 'Arial', sans-serif; background: #f4f4f4; margin: 0; 
-            display: flex; flex-direction: column; align-items: center; min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--dark); color: var(--white);
+            margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;
         }
-        .app-container { width: 100%; max-width: 500px; padding: 20px; text-align: center; }
+        .container { width: 100%; max-width: 600px; padding: 20px; box-sizing: border-box; }
         
-        /* Das Rad */
-        .wheel-box { position: relative; width: 300px; height: 300px; margin: 20px auto; }
-        .pointer { 
+        /* Header & Stats */
+        .header { text-align: center; padding: 10px; border-bottom: 2px solid var(--pokered); margin-bottom: 20px; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .stat-card { background: #3d3d3d; padding: 10px; border-radius: 8px; text-align: center; font-size: 0.9rem; }
+
+        /* Das Glücksrad */
+        .wheel-area { position: relative; width: 320px; height: 320px; margin: 0 auto 30px; }
+        .pointer {
             position: absolute; top: -15px; left: 50%; transform: translateX(-50%);
             width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent;
-            border-top: 30px solid var(--primary); z-index: 10;
+            border-top: 30px solid var(--pokered); z-index: 100;
         }
-        #wheel { 
-            width: 100%; height: 100%; border-radius: 50%; border: 5px solid var(--dark);
+        #wheel {
+            width: 100%; height: 100%; border-radius: 50%; border: 6px solid #555;
             position: relative; overflow: hidden; transition: transform 4s cubic-bezier(0.15, 0, 0.15, 1);
-            background: white;
+            background: var(--white);
         }
         .segment {
             position: absolute; width: 50%; height: 50%; transform-origin: 100% 100%;
             display: flex; align-items: center; justify-content: center;
-            color: white; font-weight: bold; font-size: 14px; clip-path: polygon(0 0, 100% 0, 100% 100%);
+            color: white; font-weight: bold; font-size: 11px; text-align: center;
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+        }
+        .segment span {
+            transform: rotate(45deg) translate(15px, 15px);
+            display: block; width: 80px; text-shadow: 1px 1px 2px black;
         }
 
-        /* Status & Info */
-        .status-bar { background: var(--dark); color: white; padding: 10px; border-radius: 10px; margin-bottom: 20px; }
-        .result-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-top: 20px; min-height: 150px; }
-        
-        button { 
-            background: var(--primary); color: white; border: none; padding: 15px 30px; 
-            font-size: 18px; border-radius: 50px; cursor: pointer; margin-top: 10px; width: 80%;
+        /* Controls */
+        #spin-btn {
+            width: 100%; padding: 15px; font-size: 1.2rem; font-weight: bold;
+            background: var(--pokered); color: white; border: none; border-radius: 10px;
+            cursor: pointer; box-shadow: 0 4px #a31111; margin-bottom: 20px;
         }
-        button:disabled { background: #999; }
-        img { width: 100px; height: 100px; }
+        #spin-btn:active { transform: translateY(2px); box-shadow: 0 2px #a31111; }
+        #spin-btn:disabled { background: #666; box-shadow: none; cursor: not-allowed; }
+
+        /* Ergebnis-Bereich */
+        .result-box {
+            background: var(--white); color: var(--dark); border-radius: 15px;
+            padding: 20px; text-align: center; min-height: 180px; margin-bottom: 20px;
+        }
+        .pokemon-display img { width: 120px; height: 120px; }
+        
+        /* Team & History */
+        .team-title { color: var(--pokeyellow); margin-bottom: 10px; }
+        .team-list { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+        .team-slot {
+            width: 80px; background: #3d3d3d; border-radius: 10px; padding: 5px;
+            text-align: center; font-size: 0.7rem; border: 1px solid #555;
+        }
+        .team-slot img { width: 50px; height: 50px; }
+
         .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="app-container">
-    <div class="status-bar">
-        <span id="game-phase">Phase: Generation wählen</span>
+<div class="container">
+    <div class="header">
+        <h1>Poké-Roulette v2</h1>
+        <div id="phase-display">Lade Spiel...</div>
     </div>
 
-    <div class="wheel-box">
+    <div class="stats-grid">
+        <div class="stat-card">Region: <span id="stat-gen">-</span></div>
+        <div class="stat-card">Team-Größe: <span id="stat-team">0</span>/6</div>
+    </div>
+
+    <div class="wheel-area">
         <div class="pointer"></div>
         <div id="wheel"></div>
     </div>
 
-    <button id="spin-btn">DREHEN!</button>
+    <button id="spin-btn">JETZT DREHEN!</button>
 
-    <div class="result-card" id="result">
-        <h2 id="result-title">Bereit?</h2>
-        <div id="result-content">Klicke auf Drehen, um zu starten.</div>
-        <img id="result-img" class="hidden" src="" alt="Pokemon">
-        <button id="next-btn" class="hidden">Weiter zur nächsten Phase</button>
+    <div class="result-box">
+        <div id="result-text">Willkommen! Wähle zuerst deine Generation aus.</div>
+        <div id="pokemon-display" class="hidden">
+            <h2 id="poke-name"></h2>
+            <img id="poke-img" src="" alt="">
+        </div>
+        <button id="confirm-btn" class="hidden" style="margin-top:10px; padding:8px 20px; background: var(--pokeblue); color:white; border:none; border-radius:5px;">Übernehmen</button>
     </div>
+
+    <h3 class="team-title">Dein Team:</h3>
+    <div class="team-list" id="team-list">
+        </div>
 </div>
 
 <script>
-    // --- DATEN ---
-    const starters = {
-        1: [1, 4, 7], 2: [152, 155, 158], 3: [252, 255, 258],
-        4: [387, 390, 393], 5: [495, 498, 501], 6: [650, 653, 656],
-        7: [722, 725, 728], 8: [810, 813, 816], 9: [906, 909, 912]
+    // --- Spiel-Konfiguration ---
+    const GEN_DATA = {
+        1: { name: "Kanto", range: [1, 151] },
+        2: { name: "Johto", range: [152, 251] },
+        3: { name: "Hoenn", range: [252, 386] },
+        4: { name: "Sinnoh", range: [387, 493] },
+        5: { name: "Einall", range: [494, 649] }
     };
 
-    const actions = [
-        "Neuer Encounter (Fangen)", "Arena-Kampf!", "Rivalen-Kampf", 
-        "Item finden", "Pokémon entwickeln", "Tauschen (PC)", 
-        "Heilung im Center", "Zufälliges Ereignis"
+    const MAIN_ACTIONS = [
+        "Neue Route (Catch)", "Arena-Kampf", "Rivalen-Kampf", 
+        "Trainer-Kampf", "Item finden", "Pokémon-Tausch", 
+        "Heilung", "Besonderes Event"
     ];
 
-    let state = {
-        phase: 'SELECT_GEN',
-        selectedGen: null,
-        selectedStarter: null,
+    // --- State (Das Gedächtnis des Spiels) ---
+    let gameState = {
+        phase: 'SELECT_GEN', // SELECT_GEN -> SELECT_STARTER -> MAIN_GAME
+        gen: null,
+        team: [],
         currentRotation: 0,
-        isSpinning: false
+        isSpinning: false,
+        lastResult: null
     };
 
     const wheel = document.getElementById('wheel');
     const spinBtn = document.getElementById('spin-btn');
-    const nextBtn = document.getElementById('next-btn');
-    const resTitle = document.getElementById('result-title');
-    const resContent = document.getElementById('result-content');
-    const resImg = document.getElementById('result-img');
-    const phaseLabel = document.getElementById('game-phase');
+    const resultText = document.getElementById('result-text');
+    const phaseDisplay = document.getElementById('phase-display');
+    const pokeDisplay = document.getElementById('pokemon-display');
+    const confirmBtn = document.getElementById('confirm-btn');
 
-    // --- LOGIK ---
-
-    function buildWheel(items) {
+    // --- Hilfsfunktionen ---
+    function updateWheel(items) {
         wheel.innerHTML = '';
-        const angle = 360 / items.length;
+        const count = items.length;
+        const angle = 360 / count;
         items.forEach((item, i) => {
             const seg = document.createElement('div');
             seg.className = 'segment';
             seg.style.transform = `rotate(${i * angle}deg)`;
-            seg.style.backgroundColor = `hsl(${i * (360/items.length)}, 70%, 50%)`;
-            seg.innerHTML = `<span style="transform: rotate(45deg) translate(20px, 20px)">${item}</span>`;
+            seg.style.backgroundColor = `hsl(${i * (360/count)}, 65%, 45%)`;
+            seg.innerHTML = `<span>${item}</span>`;
             wheel.appendChild(seg);
         });
     }
 
-    function initPhase() {
-        nextBtn.classList.add('hidden');
-        resImg.classList.add('hidden');
-        
-        if (state.phase === 'SELECT_GEN') {
-            phaseLabel.innerText = "Phase: Generation wählen";
-            buildWheel([1, 2, 3, 4, 5, 6, 7, 8, 9]);
-        } else if (state.phase === 'SELECT_STARTER') {
-            phaseLabel.innerText = `Phase: Starter wählen (Gen ${state.selectedGen})`;
-            // Wir holen die Namen der Starter per API für das Rad
-            resContent.innerText = "Lade Starter...";
-            buildWheel(["Pflanze", "Feuer", "Wasser"]);
+    async function fetchPoke(id) {
+        const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${id}`);
+        return await res.json();
+    }
+
+    function renderTeam() {
+        const list = document.getElementById('team-list');
+        list.innerHTML = '';
+        gameState.team.forEach(p => {
+            const slot = document.createElement('div');
+            slot.className = 'team-slot';
+            slot.innerHTML = `<img src="${p.sprite}"><br>${p.name}`;
+            list.appendChild(slot);
+        });
+        document.getElementById('stat-team').innerText = gameState.team.length;
+    }
+
+    // --- Phasen-Steuerung ---
+    function setupPhase() {
+        pokeDisplay.classList.add('hidden');
+        confirmBtn.classList.add('hidden');
+
+        if (gameState.phase === 'SELECT_GEN') {
+            phaseDisplay.innerText = "Schritt 1: Wähle deine Region";
+            updateWheel(["Gen 1", "Gen 2", "Gen 3", "Gen 4", "Gen 5"]);
+        } else if (gameState.phase === 'SELECT_STARTER') {
+            phaseDisplay.innerText = "Schritt 2: Wer ist dein Partner?";
+            updateWheel(["Pflanze", "Feuer", "Wasser"]);
         } else {
-            phaseLabel.innerText = "Spiel-Modus: Aktionen";
-            buildWheel(actions);
+            phaseDisplay.innerText = "Phase: Abenteuer-Loop";
+            updateWheel(MAIN_ACTIONS);
         }
     }
 
-    async function spin() {
-        if (state.isSpinning) return;
-        state.isSpinning = true;
-        spinBtn.disabled = true;
-
-        const extraDeg = Math.floor(Math.random() * 360) + 1800; // 5 Runden + Zufall
-        state.currentRotation += extraDeg;
-        wheel.style.transform = `rotate(${state.currentRotation}deg)`;
-
-        setTimeout(async () => {
-            state.isSpinning = false;
-            spinBtn.disabled = false;
-            processResult();
-        }, 4000);
-    }
-
-    async function processResult() {
+    async function handleResult() {
         const segments = wheel.children.length;
-        const actualDeg = state.currentRotation % 360;
-        const winningIndex = Math.floor((360 - actualDeg) / (360 / segments)) % segments;
+        const actualDeg = gameState.currentRotation % 360;
+        const winIdx = Math.floor((360 - (actualDeg % 360)) / (360 / segments)) % segments;
 
-        if (state.phase === 'SELECT_GEN') {
-            state.selectedGen = winningIndex + 1;
-            resTitle.innerText = `Generation ${state.selectedGen}!`;
-            resContent.innerText = "Du spielst in dieser Region. Klicke weiter für deinen Starter.";
-            nextBtn.classList.remove('hidden');
+        if (gameState.phase === 'SELECT_GEN') {
+            gameState.gen = winIdx + 1;
+            document.getElementById('stat-gen').innerText = GEN_DATA[gameState.gen].name;
+            resultText.innerText = `Region gewählt: ${GEN_DATA[gameState.gen].name}!`;
+            gameState.phase = 'SELECT_STARTER';
+            setTimeout(setupPhase, 2000);
         } 
-        else if (state.phase === 'SELECT_STARTER') {
-            const starterIds = starters[state.selectedGen];
-            const winnerId = starterIds[winningIndex];
+        else if (gameState.phase === 'SELECT_STARTER') {
+            // Starter ID Logik (vereinfacht)
+            const starterIds = {1:[1,4,7], 2:[152,155,158], 3:[252,255,258], 4:[387,390,393], 5:[494,498,501]};
+            const pId = starterIds[gameState.gen][winIdx];
+            const data = await fetchPoke(pId);
             
-            const resp = await fetch(`https://pokeapi.co/api/v2/pokemon/${winnerId}`);
-            const data = await resp.json();
-            
-            state.selectedStarter = data.name;
-            resTitle.innerText = `Dein Starter: ${data.name.toUpperCase()}`;
-            resContent.innerText = "Ein starker Partner! Jetzt beginnt das Abenteuer.";
-            resImg.src = data.sprites.other['official-artwork'].front_default;
-            resImg.classList.remove('hidden');
-            nextBtn.classList.remove('hidden');
-        } 
+            gameState.lastResult = { name: data.name, sprite: data.sprites.front_default, id: pId };
+            showPokeResult(`Dein Starter ist ${data.name.toUpperCase()}!`);
+            confirmBtn.innerText = "Ins Team aufnehmen";
+            confirmBtn.classList.remove('hidden');
+        }
         else {
-            const action = actions[winningIndex];
-            resTitle.innerText = "Deine Aktion:";
-            resContent.innerText = action;
+            const action = MAIN_ACTIONS[winIdx];
+            resultText.innerText = `Aktion: ${action}`;
             
-            if (action.includes("Encounter")) {
-                // Zufälliges Pokemon aus den gewählten Gens fangen
-                const randomId = Math.floor(Math.random() * 900) + 1;
-                const resp = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
-                const data = await resp.json();
-                resContent.innerText = `Fangversuch: Ein wildes ${data.name.toUpperCase()} erscheint!`;
-                resImg.src = data.sprites.other['official-artwork'].front_default;
-                resImg.classList.remove('hidden');
+            if (action.includes("Route") || action.includes("Catch")) {
+                const range = GEN_DATA[gameState.gen].range;
+                const randomId = Math.floor(Math.random() * (range[1] - range[0] + 1)) + range[0];
+                const data = await fetchPoke(randomId);
+                gameState.lastResult = { name: data.name, sprite: data.sprites.front_default, id: randomId };
+                showPokeResult(`Ein wildes ${data.name.toUpperCase()} erscheint!`);
+                confirmBtn.innerText = "Fangen & ins Team";
+                confirmBtn.classList.remove('hidden');
             }
         }
     }
 
-    nextBtn.addEventListener('click', () => {
-        if (state.phase === 'SELECT_GEN') state.phase = 'SELECT_STARTER';
-        else if (state.phase === 'SELECT_STARTER') state.phase = 'GAME_LOOP';
-        initPhase();
-        resTitle.innerText = "Nächster Schritt";
-        resContent.innerText = "Drehe das Rad!";
+    function showPokeResult(msg) {
+        resultText.innerText = msg;
+        document.getElementById('poke-name').innerText = gameState.lastResult.name;
+        document.getElementById('poke-img').src = gameState.lastResult.sprite;
+        pokeDisplay.classList.remove('hidden');
+    }
+
+    // --- Event Listener ---
+    spinBtn.addEventListener('click', () => {
+        if (gameState.isSpinning) return;
+        gameState.isSpinning = true;
+        spinBtn.disabled = true;
+        
+        const rotation = 1800 + Math.floor(Math.random() * 360);
+        gameState.currentRotation += rotation;
+        wheel.style.transform = `rotate(${gameState.currentRotation}deg)`;
+
+        setTimeout(() => {
+            gameState.isSpinning = false;
+            spinBtn.disabled = false;
+            handleResult();
+        }, 4000);
     });
 
-    spinBtn.addEventListener('click', spin);
-    initPhase();
+    confirmBtn.addEventListener('click', () => {
+        if (gameState.team.length < 6) {
+            gameState.team.push(gameState.lastResult);
+            renderTeam();
+        } else {
+            alert("Team ist voll! Schick es in den PC (kommt in v3)");
+        }
+        gameState.phase = 'MAIN_GAME';
+        setupPhase();
+        resultText.innerText = "Pokémon hinzugefügt! Drehe für die nächste Aktion.";
+    });
+
+    // Start
+    setupPhase();
+    renderTeam();
 </script>
 
 </body>
